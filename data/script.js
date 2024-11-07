@@ -1,6 +1,6 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-function onButton() {
+function onButton() { 
     var xhttp = new XMLHttpRequest();
     xhttp.open("GET", "on", true);
     xhttp.send();
