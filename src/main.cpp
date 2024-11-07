@@ -8,11 +8,11 @@
 
 Adafruit_ADS1115 ads;
 
-const char* wifi_network_ssid     = "Mathis";/*//"DESKTOP-UJN7CDI 7139"; //"Livebox-D50A";"Wifi de Helene";*/
-const char* wifi_network_password =  "";/*//"682!sD35"; //"tFvaznXo3LtdrznG7e";"12132225Ma";*/
+const char* wifi_network_ssid     = "Wifi_SSID";
+const char* wifi_network_password =  "";
 
 const char* soft_ap_ssid          = "ESP_Wifi";
-const char* soft_ap_password      = "011123Ma-Lea*";
+const char* soft_ap_password      = "9839*-56m";
 
 const int led = 2;
 const int analogv = 34;
