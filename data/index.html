@@ -1,42 +1,256 @@
 <!DOCTYPE html>
-<html lang="fr"> 
-<head>
+<html lang="fr">
+  <head>
     <title>Serveur ESP32</title>
 
-    <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
-    <link rel="stylesheet" type="text/css" href="w3.css">
-    <script type="text/javascript" src="script.js"></script>
-    
-</head>
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1"
+      charset="UTF-8"
+    />
+    <link rel="stylesheet" type="text/css" href="base.css" />
+    <script type="text/javascript" src="./script.js"></script>
 
-<body class="w3-animate-opacity">
-    
+    <script
+      language="javascript"
+      src="./chart.js"
+      type="text/javascript"
+    ></script>
+    <!--<script
+      language="javascript"
+      src="libraries/chartjs-adapter-date-fns.bundle.min.js"
+      type="text/javascript"
+    ></script>
+    <script
+      language="javascript"
+      src="libraries/chartjsEg.js"
+      type="text/javascript"
+    ></script>-->
+  </head>
+
+  <body class="w3-animate-opacity">
     <div class="w3-card w3-blue w3-padding-small w3-center">
-        <h1>ESP 32</h1>
-    </div>
-    
-    <div class="w3-margin w3-center w3-card w3-padding-24">
-        <canvas id="hchart"  width="400" height="100"></canvas>
+      <h1>ESP 32</h1>
     </div>
 
     <div class="w3-margin w3-center w3-card w3-padding-24">
-        <h3 class="w3-padding">Allumer/Eteindre la LED</h3>
-        <button onclick="onButton()" class="w3-button w3-green w3-xlarge w3-ripple w3-wide" style="width: 40%;">ON</button>
-        <button onclick="offButton()" class="w3-button w3-red w3-xlarge w3-ripple w3-wide" style="width: 40%;">Off</button>
+      <canvas id="chart-ecg" width="600" height="300" ></canvas>
+
     </div>
 
     <div class="w3-margin w3-center w3-card w3-padding-24">
-        <h3 class="w3-padding">Valeur Analogique</h3>
-        <p class="w3-xxlarge"><span id="analogv">0</span></p>
+      <h3 class="w3-padding">Valeur Analogique</h3>
+      <p class="w3-xxlarge"><span id="analogv">ERR</span></p>
+    </div>
+
+    <div class="w3-margin w3-center w3-card w3-padding-24">
+      <h3 class="w3-padding">Allumer/Eteindre la LED</h3>
+      <button
+        onclick="onButton()"
+        class="w3-button w3-green w3-xlarge w3-ripple w3-wide"
+        style="width: 40%"
+      >
+        ON
+      </button>
+      <button
+        onclick="offButton()"
+        class="w3-button w3-red w3-xlarge w3-ripple w3-wide"
+        style="width: 40%"
+      >
+        Off
+      </button>
     </div>
 
     <div class="w3-padding w3-center w3-footer">
-        <i><a href="https://google.com/" style="text-decoration: none;">Mathis 2024</a></i>
+      <i
+        ><a href="https://google.com/" style="text-decoration: none"
+          >Mathis 2024</a
+        ></i
+      >
     </div>
-
-</body>
+  </body>
 </html>
 
 <script>
-    
+
+  let dataSize = 10000;
+  let readings = new Array(dataSize);
+  let options = { baudRate: 9600 }; // change the data rate to whatever you wish
+
+  let canvas = document.getElementById("chart-ecg");
+  let ctx = canvas.getContext("2d");
+
+  let chart;
+  
+  // data object for the chart:
+  const data = {
+    // X axis labels
+    labels: new Array(dataSize),
+    datasets: [
+      {
+        label: "ECG", // chart label
+        data: readings, // the data to chart
+        backgroundColor: "#C1142B",
+        borderColor: "#C1142B",
+        borderWidth: 1.2,
+        pointBorderColor: "#C1142B",
+        pointRadius: 0.2, // point size
+      },
+    ],
+  };
+
+  const config = {
+    type: "line", // type of chart
+    data: data, // the data
+    options: {
+      animation: false, // remove animation to speed drawing up
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: true,
+          position: "top",
+          align: "end",
+        },
+        title: {
+          display: true,
+          text: "Electrocardiogramme",
+          font: {
+            size: 20,
+          },
+          padding: {
+            bottom: 0,
+          },
+          color: "#fff",
+        },
+      },
+      scales: {
+        // axis ranges:
+        y: {
+          title: {
+            display: true,
+            text: "Amplitude",
+            font: {
+              size: 20,
+            },
+            color: "#fff",
+          },
+          ticks: {
+            font: {
+              size: 14,
+            },
+            color: "#fff",
+          },
+          grid: { display: true, color: "#131c2b", borderColor: "#ffcc33" },
+          min: 0,
+          max: 1040,
+        },
+
+        x: {
+          title: {
+            display: true,
+            text: "Time(s:us)",
+            font: {
+              size: 20,
+            },
+            color: "#fff",
+          },
+          ticks: {
+            font: {
+              size: 10,
+            },
+            color: "#fff",
+          },
+          grid: { display: true, color: "#131c2b", borderColor: "#ffcc33" },
+          min: 0,
+        },
+      },
+    },
+  };
+
+  chart = new Chart(
+    ctx, // context: this sketch
+    config // config from the global variables
+  );
+
+  function draw() {
+    chart.update();
+  }
+
+  setInterval(function () {
+    var xhttp = new XMLHttpRequest();
+
+    xhttp.onreadystatechange = function () {
+      if (this.readyState == 4 && this.status == 200) {
+        document.getElementById("analogv").innerHTML = this.responseText;
+        const analv = this.responseText;
+
+        function serialEvent() {
+          let today = new Date();
+          let t = today.getSeconds() + ":" + today.getMilliseconds();
+          console.log(potData)
+          let potData = Number(analv);
+          if (potData) {
+            readings.push(potData);
+            data.labels.push(t);
+            if (readings.length > dataSize) {
+              readings.shift();
+              data.labels.shift();
+            }
+          }
+        }
+
+        serialEvent();
+      }
+    };
+
+    xhttp.open("GET", "/ecg", true);
+    xhttp.send();
+  }, 50);
+
+  /* var chartT = new Highcharts.Chart({
+    chart: { renderTo: "chart-ecg" },
+    title: { text: "ECG" },
+    series: [
+      {
+        showInLegend: false,
+        data: [],
+      },
+    ],
+    plotOptions: {
+      line: { animation: false, dataLabels: { enabled: false } },
+      series: { color: "#059e8a" },
+    },
+    xAxis: { type: "datetime", dateTimeLabelFormats: { second: "%H:%M:%S" } },
+    yAxis: {
+      title: { text: "Temperature (Celsius)" },
+    },
+    credits: { enabled: false },
+  });
+
+  setInterval(function () {
+    var xhttp = new XMLHttpRequest();
+
+    xhttp.onreadystatechange = function () {
+      if (this.readyState == 4 && this.status == 200) {
+        
+
+        document.getElementById("analogv").innerHTML = this.responseText;
+        const analogv_m = this.responseText; 
+
+        var x = new Date().getTime(), y = parseFloat(analogv_m);
+
+        //console.log(this.responseText);
+
+        if (chartT.series[0].data.length > 40) {
+          chartT.series[0].addPoint([x, y], true, true, true);
+        } else {
+          chartT.series[0].addPoint([x, y], true, false, true);
+        }
+      }
+    };
+
+    xhttp.open("GET", "/ecg", true);
+    xhttp.send();
+  }, 10);*/
 </script>
