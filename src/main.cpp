@@ -7,6 +7,7 @@
 #include <Adafruit_I2CDevice.h>
 #include <SPI.h>
 #include <WiFiClientSecure.h>
+#include <SPI.h>
 
 Adafruit_ADS1115 ads;
 
