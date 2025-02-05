@@ -101,7 +101,7 @@ void loop()
 
     /* Système de Plotter via Cursor */
     // int16_t adc;
-    // int value;
+    // int value;mm
     // adc = ads.readADC_SingleEnded(0);
     // value = adc;
     // Serial.print(">ECG: "); Serial.println(value);
